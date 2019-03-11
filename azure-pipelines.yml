@@ -10,8 +10,75 @@ pool:
   vmImage: 'Ubuntu-16.04'
 
 variables:
-  buildConfiguration: 'Release'
+  buildConfiguration: 'Debug'
 
 steps:
+
+- powershell: |
+   Write-host "Git tags: " | git tag -l
+   
+   $git_version = (git describe --always --tags --long --match v?.?.? | Select-String -pattern '(?<major>[0-9]+)\.(?<minor>[0-9]+).(?<patch>[0-9]+)-(?<commitCount>[0-9]+)-(?<hash>[a-z0-9]+)').Matches[0].Groups
+   
+   IF([string]::IsNullOrEmpty($git_version)) 
+   {
+   Write-Host "There is no spoon, you got no tags pushed, if this is a new project push a base tag."
+   }
+   
+   $git_describe = $git_version[0].Value
+   
+   $majorVersion = $git_version['major']
+   $minorVersion = $git_version['minor']
+   $patchVersion = $git_version['patch']
+   $commitCount= $git_version['commitCount']
+   
+   $version = [string]::Join('.', @(
+    $majorVersion,
+    $minorVersion,
+    $patchVersion
+   ))
+   
+   Write-Host "Version is: $version-$commitCount"
+   
+   $env:CurrentVersion = "$version-$commitCount";
+   
+   Write-Host "##vso[build.updatebuildnumber]$version-$commitCount"
+   Write-Host "##vso[task.setvariable variable=CurrentVersion]$version-$commitCount"
+   Write-Host "Our version is: $($env:CurrentVersion)";
+   
+  displayName: 'Set-CurrentVersion'
+- task: SonarSource.sonarcloud.14d9cde6-c1da-4d55-aa01-2965cd301255.SonarCloudPrepare@1
+  displayName: 'Prepare analysis on SonarCloud'
+  inputs:
+    SonarCloud: SonarCloud
+    organization: jonizen-github
+    projectKey: sonar-cloud-core-2-demo
+    projectName: SonarCloud .Net Core 2 React Demo
+    projectVersion: '$(CurrentVersion)'
+    extraProperties: |
+     # Additional properties that will be passed to the scanner, 
+     # Put one key=value per line, example:
+     sonar.exclusions=node_modules/**, Builds/**, Static/**
+- task: Npm@0
+  displayName: 'npm install root folder'
+  #Your build pipeline references the ‘BuildConfiguration’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
+#Your build pipeline references the ‘BuildPlatform’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
+#Your build pipeline references the ‘BuildConfiguration’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
+
+- task: VSTest@2
+  displayName: 'Test Assemblies'
+  inputs:
+    testAssemblyVer2: |
+     **\$(BuildConfiguration)\*test*.dll
+     !**\obj\**
+    codeCoverageEnabled: true
+    platform: '$(BuildPlatform)'
+    configuration: '$(BuildConfiguration)'
 - script: dotnet build --configuration $(buildConfiguration)
   displayName: 'dotnet build $(buildConfiguration)'
+
+- task: SonarSource.sonarcloud.ce096e50-6155-4de8-8800-4221aaeed4a1.SonarCloudAnalyze@1
+  displayName: 'Run Code Analysis'
+
+  steps:
+- task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@1
+  displayName: 'Publish Quality Gate Result'
