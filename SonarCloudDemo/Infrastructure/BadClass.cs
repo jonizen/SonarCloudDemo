@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -20,11 +21,11 @@ namespace SonarCloudDemo.Infrastructure
 
             var url = "https://www.google.se";
 
-            var client = new HttpClient();
+            var webClient = new WebClient();
 
-            var result = client.GetAsync(url).Result;
+            var result = webClient.DownloadString(url);
 
-            return result.Content.ReadAsStringAsync().Result;
+            return result;
 
         }
 
