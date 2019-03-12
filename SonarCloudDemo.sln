@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.28307.438
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SonarCloudDemo", "SonarCloudDemo\SonarCloudDemo.csproj", "{3D4AC31D-B35C-4AE7-A6D3-D61B4D265335}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SonarCloudDemo.Tests.Unit", "SonarCloudDemo.Tests.Unit\SonarCloudDemo.Tests.Unit.csproj", "{B6D8A782-5A0D-494A-9B40-02AB514859F8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SonarCloudDemo.Tests.Unit", "SonarCloudDemo.Tests.Unit\SonarCloudDemo.Tests.Unit.csproj", "{B6D8A782-5A0D-494A-9B40-02AB514859F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
